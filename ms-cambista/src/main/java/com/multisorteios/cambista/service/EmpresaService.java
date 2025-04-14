@@ -3,7 +3,7 @@ package com.multisorteios.cambista.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import br.com.multisorteios.common.repository.EmpresaRepository;
+import com.multisorteios.common.repository.EmpresaRepository;
 
 @Service
 public class EmpresaService {
