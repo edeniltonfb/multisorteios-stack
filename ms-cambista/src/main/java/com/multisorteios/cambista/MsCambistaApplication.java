@@ -15,10 +15,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 	    "com.multisorteios.common"
 	})
 	@EntityScan(basePackages = {
-	    "com.multisorteios.common.model"
+	    "com.multisorteios.common.model",
+	    "com.multisorteios.cambista.model"
 	})
 	@EnableJpaRepositories(basePackages = {
-	    "com.multisorteios.common.repository"
+	    "com.multisorteios.common.repository",
+	    "com.multisorteios.cambista.repository"
 	})
 public class MsCambistaApplication extends SpringBootServletInitializer{
     public static void main(String[] args) {
