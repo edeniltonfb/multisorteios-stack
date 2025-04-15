@@ -59,4 +59,14 @@ public class TokenAcessoCambistaService {
 		return repo.save(ta);
 	}
 	
+	
+	
+	/*public TokenAcesso insert(TokenAcesso item) {
+		return repo.save(item);
+	}
+
+	public TokenAcesso update(TokenAcesso item) {
+		return repo.save(item);
+	}*/
+
 }
