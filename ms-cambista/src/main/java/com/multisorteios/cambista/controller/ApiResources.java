@@ -18,6 +18,7 @@ import com.multisorteios.cambista.trasnfer.ApostaBolaoTO;
 import com.multisorteios.cambista.trasnfer.ExtratoVendaTO;
 import com.multisorteios.common.exception.BusinessException;
 import com.multisorteios.common.model.Cambista;
+import com.multisorteios.common.transfer.DadosClienteTO;
 import com.multisorteios.common.transfer.EmptyResponseTO;
 import com.multisorteios.common.transfer.EventoBasicoDTO;
 import com.multisorteios.common.transfer.GenericCollectionResponseTO;
@@ -116,6 +117,7 @@ public class ApiResources {
 		}catch (BusinessException e) {
 			result = new GenericCollectionResponseTO<EventoBasicoDTO, List<EventoBasicoDTO>>(false, e.getMessage(), null);
 		}catch (Exception e) {
+			e.printStackTrace();
 			result = new GenericCollectionResponseTO<EventoBasicoDTO, List<EventoBasicoDTO>>(false, Constants.DEFAULT_ERROR_MESSAGE, null);
 		}
 		
@@ -140,6 +142,24 @@ public class ApiResources {
 		}catch (Exception e) {
 			e.printStackTrace();
 			result = new GenericResponseTO<ExtratoVendaTO>(false, Constants.DEFAULT_ERROR_MESSAGE, null);
+		}
+		
+		return ResponseEntity.ok().body(result);
+		
+	}
+	
+	@GetMapping("/obterdadoscliente")
+	public ResponseEntity<GenericResponseTO<DadosClienteTO>> obterDadosCliente(@RequestHeader Integer empresaId, @RequestParam String token, @RequestParam String telefone) {
+		
+		GenericResponseTO<DadosClienteTO> result;
+		try{
+			DadosClienteTO data = service.obterDadosCliente(empresaId, token, telefone);
+			result = new GenericResponseTO<DadosClienteTO>(true, null, data);
+		}catch (BusinessException e) {
+			result = new GenericResponseTO<DadosClienteTO>(false, e.getMessage(), null);
+		}catch (Exception e) {
+			e.printStackTrace();
+			result = new GenericResponseTO<DadosClienteTO>(false, Constants.DEFAULT_ERROR_MESSAGE, null);
 		}
 		
 		return ResponseEntity.ok().body(result);

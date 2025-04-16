@@ -18,6 +18,8 @@ public class CustomBilheteService {
 	
 	public List<Bilhete> findByEventoCambistaId(String eventoId, Integer cambistaId){
 		
+		System.out.println("busca por evento " + eventoId + " cambista : " + cambistaId);
+		
 		Bilhete exemplo = new Bilhete();
 		exemplo.setEventoId(eventoId);
 		exemplo.setCambistaId(cambistaId);

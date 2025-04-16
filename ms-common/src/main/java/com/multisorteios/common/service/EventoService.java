@@ -65,7 +65,11 @@ public class EventoService {
 	}
 	
 	public List<EventoBasicoDTO> listarEventos(Integer empresaId) {
+		try {
+		System.out.println("listando os eventos");
 		List<Evento> eventoList = repo.findByEmpresaId(empresaId);
+		
+		System.out.println(eventoList.size() + " eventos encontrados");
 		Collections.sort(eventoList, new Comparator<Evento>() {
 
 			@Override
@@ -75,32 +79,41 @@ public class EventoService {
 
 		});
 
-		return eventoList
+		
+		
+		List<EventoBasicoDTO> listaFiltrada = eventoList
 				.stream()
-				.filter(x -> EventoSituacao.CANCELADO == x.getSituacao())
-				.filter(x -> x.getDataInicio().after(DateTime.now().getDate().addDays(-40).getTime()))
+				//.filter(x -> EventoSituacao.CANCELADO != x.getSituacao())
+				//.filter(x -> x.getDataInicio().after(DateTime.now().getDate().addDays(-40).getTime()))
 				.map(x -> parseToBasicDTO(x))
 				.collect(Collectors.toList());
+		
+		System.out.println("retornando " + listaFiltrada.size());
+		return listaFiltrada;
+		}catch (Exception e) {
+			return null;
+		}
 	}
 	
 	private EventoBasicoDTO parseToBasicDTO(Evento evento) {
+		System.out.println("Entrou no parse ~");
 		TituloEvento te = tituloEventoService.findByEventoEmpresaId(evento.getId(), evento.getEmpresaId());
-
+		System.out.println("no parse 1");
 		EventoBasicoDTO dto = new EventoBasicoDTO();
 		dto.setId(evento.getId());
 		dto.setHorario(Horario.getDescription(evento.getHorarioInicio()));
 		dto.setDataSorteio(evento.getDataInicio());
 		dto.setTitulo(te == null? null : te.getTitulo());
-
+		System.out.println("no parse 2");
 		List<ImagemEvento> ieList = imagemEventoService.findByEventoEmpresaId(evento.getId(), evento.getEmpresaId());
-
+		System.out.println("no parse 3");
 		if(!CollectionsUtils.isNullOrEmpty(ieList)) {
 			dto.setImageUrl("https://multisorteios.dev/restapi/files/download?fileName=" + ieList.get(0).getFileName());
 		}
 
 		dto.setSituacao(EventoSituacao.getValue(evento.getSituacao()));
 		dto.setSubtipo(EventoSubTipo.getDescription(evento.getEventoSubtipo()));
-
+		System.out.println("no parse 4");
 		return dto;
 	}
 

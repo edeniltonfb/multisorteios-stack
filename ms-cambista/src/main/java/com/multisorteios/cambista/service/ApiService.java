@@ -19,13 +19,16 @@ import com.multisorteios.common.exception.BusinessException;
 import com.multisorteios.common.model.ApostaBolao;
 import com.multisorteios.common.model.Bilhete;
 import com.multisorteios.common.model.Cambista;
+import com.multisorteios.common.model.Cliente;
 import com.multisorteios.common.model.Evento;
 import com.multisorteios.common.model.fake.DadosAposta;
 import com.multisorteios.common.service.ApostaBolaoService;
 import com.multisorteios.common.service.BilheteApostaService;
 import com.multisorteios.common.service.BilheteService;
 import com.multisorteios.common.service.CambistaService;
+import com.multisorteios.common.service.ClienteService;
 import com.multisorteios.common.service.EventoService;
+import com.multisorteios.common.transfer.DadosClienteTO;
 import com.multisorteios.common.transfer.EventoBasicoDTO;
 import com.multisorteios.common.transfer.LoginTO;
 import com.multisorteios.common.util.DateTime;
@@ -37,64 +40,67 @@ public class ApiService {
 
 	@Autowired
 	private TokenAcessoCambistaService tokenAcessoCambistaService;
-	
+
 	@Autowired
 	private CambistaService cambistaService;
-	
+
 	@Autowired
 	private EventoService eventoService;
-	
+
 	@Autowired
 	private BilheteService bilheteService;
-	
+
 	@Autowired 
 	private CustomBilheteService customBilheteService;
-	
+
 	@Autowired
 	private BilheteApostaService bilheteApostaService;
-	
+
 	@Autowired
 	private ApostaBolaoService apostaBolaoService;
 	
+	@Autowired
+	private ClienteService clienteService;
+
 	public LoginTO login(Integer empresaId, LoginTO login) {
 		Cambista cambista = cambistaService.findByEmpresaLogin(empresaId, login.getLogin());
 		if(cambista == null || !StringUtils.equals(login.getPassword(), cambista.getSenha())) {
 			throw new BusinessException("Credenciais inválidas");
 		}
-		
+
 		TokenAcessoCambista tac = tokenAcessoCambistaService.gerarCodigoAcesso(empresaId, cambista.getId());
 		login.setToken(tac.getToken());
 		login.setName(cambista.getNome());
-		
+
 		return login;
 	}
-	
+
 	public Cambista validateToken(String token, Integer empresaId) {
 		TokenAcessoCambista tokenAcesso = tokenAcessoCambistaService.validateToken(empresaId, token);
 		if(tokenAcesso == null) {
 			throw new BusinessException("Token inválido");
 		}
-		
+
 		Cambista cambista = cambistaService.find(tokenAcesso.getId().getCambistaId());
 		if(cambista == null) {
 			throw new BusinessException("Cambista indefinido");	
 		}
-		
+
 		if(!"S".equals(cambista.getAtiva())) {
 			throw new BusinessException("Cambista inativo");	
 		}
-		
+
 		if(!IntegerUtils.equals(empresaId, cambista.getEmpresaId())) {
 			throw new BusinessException("Cambista inválido");	
 		}
-		
+
 		return cambista;
 	}
-	
-	public List<EventoBasicoDTO> listarEventos(Integer empresaId) {
-		
-		List<EventoBasicoDTO> eventoList = eventoService.listarEventos(empresaId);
 
+	public List<EventoBasicoDTO> listarEventos(Integer empresaId) {
+		System.out.println("2");
+		List<EventoBasicoDTO> eventoList = eventoService.listarEventos(empresaId);
+		System.out.println("3");
 		return eventoList;
 	}
 
@@ -103,15 +109,15 @@ public class ApiService {
 		if(!StringUtils.equals(senhaAtual, cambista.getSenha())) {
 			throw new BusinessException("Senha atual não confere");
 		}
-		
+
 		cambista.setSenha(novaSenha);
 		cambistaService.update(cambista);
-		
+
 	}
 
 	public void registrarAposta(String token, Integer empresaId, ApostaBolaoTO requestData) {
 		Cambista cambista = validateToken(token, empresaId);
-		
+
 		String eventoId = requestData.getEventoId();
 		Evento evento = eventoService.find(eventoId);
 
@@ -145,9 +151,10 @@ public class ApiService {
 		bilhete.setApostasDefinidas("S");
 		bilhete.setEmpresaAlias("");
 		bilhete.setDataLimitePagamento(new Date());
+		bilhete.setHistorico("S");
 
 		bilhete = bilheteService.insert(bilhete);
-		
+
 		//Registra as apostas
 		ApostaBolao aposta;
 		List<ApostaBolao> apostaList = new ArrayList<>();
@@ -163,11 +170,11 @@ public class ApiService {
 
 		}
 		apostaBolaoService.saveAll(apostaList);
-		
+
 		bilheteApostaService.insert2(bilhete.getId(), apostaList);
-		
+
 	}
-	
+
 	private DadosAposta refinarDadosAposta(Integer quantidade, Evento evento, String usuarioId, Integer empresaId) {
 		Integer minimoPermitido = IntegerUtils.alternative(evento.getQuantidadeMinima(), 1);
 		if(quantidade < minimoPermitido) {
@@ -180,7 +187,7 @@ public class ApiService {
 		}
 
 		return eventoService.refinarDadosAposta(quantidade, evento, empresaId);
-		
+
 	}
 
 	public ExtratoVendaTO extratoVendas(Integer empresaId, String token, String eventoId) {
@@ -188,7 +195,7 @@ public class ApiService {
 		List<Bilhete> bilheteList = customBilheteService.findByEventoCambistaId(eventoId, cambista.getId());
 		BigDecimal valorTotal = bilheteList.stream().map(x -> x.getValorBilhete()).reduce(BigDecimal.ZERO, BigDecimal::add);
 		BigDecimal comissao = valorTotal.multiply(cambista.getComissao()).divide(new BigDecimal(100), RoundingMode.CEILING);
-		
+
 		ExtratoVendaTO result = new ExtratoVendaTO();
 		result.setComissao(comissao);
 		result.setVendasRealizadas(bilheteList.size());
@@ -208,5 +215,21 @@ public class ApiService {
 						).collect(Collectors.toList()));
 		return result;
 	}
-	
+
+	public DadosClienteTO obterDadosCliente(Integer empresaId, String token, String telefone) {
+
+		validateToken(token, empresaId);
+
+		Cliente cliente = clienteService.find(telefone, empresaId);
+		DadosClienteTO result = new DadosClienteTO();
+		if(cliente != null) {
+			result.setCidade(cliente.getCidade());
+			result.setEmail(cliente.getEmail());
+			result.setNome(cliente.getNome());
+			
+		}
+		result.setTelefone(telefone);
+
+		return result;
+	}
 }

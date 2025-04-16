@@ -94,7 +94,7 @@ public class Bilhete implements Serializable {
 	private String empresaAlias;
 
 	@Column(name = "quantidade_apostas", nullable = false, columnDefinition = "SMALLINT not null default 0")
-	private int quantidadeApostas;
+	private Integer quantidadeApostas;
 
 	@Column(name = "apostas_definidas", nullable = false, length = 1, columnDefinition = "char(1) not null default 'S'")
 	private String apostasDefinidas;
@@ -289,11 +289,11 @@ public class Bilhete implements Serializable {
 		this.parceiroId = parceiroId;
 	}
 
-	public int getQuantidadeApostas() {
+	public Integer getQuantidadeApostas() {
 		return quantidadeApostas;
 	}
 
-	public void setQuantidadeApostas(int quantidadeApostas) {
+	public void setQuantidadeApostas(Integer quantidadeApostas) {
 		this.quantidadeApostas = quantidadeApostas;
 	}
 
