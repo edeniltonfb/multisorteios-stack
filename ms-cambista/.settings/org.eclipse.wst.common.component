@@ -23,7 +23,7 @@
         
         
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
-        <dependent-module archiveName="ms-common-1.0.18.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/ms-common/ms-common">
+        <dependent-module archiveName="ms-common-1.0.19.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/ms-common/ms-common">
             <dependency-type>uses</dependency-type>
         </dependent-module>
                                 

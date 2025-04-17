@@ -1,5 +1,7 @@
 package com.multisorteios.common.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,4 +15,6 @@ public interface CambistaRepository extends JpaRepository<Cambista, Integer>{
 	@Query(value = "SELECT * FROM CAMBISTA WHERE EMPRESA_ID = :empresaId AND LOGIN = :login", nativeQuery = true)
 	Cambista findByEmpresaLogin(@Param("empresaId") Integer empresaId, @Param("login")String login);
 
+	@Query(value = "SELECT * FROM CAMBISTA WHERE EMPRESA_ID = :empresaId ORDER BY NOME", nativeQuery = true)
+	List<Cambista> findByMatrizId(Integer empresaId);
 }

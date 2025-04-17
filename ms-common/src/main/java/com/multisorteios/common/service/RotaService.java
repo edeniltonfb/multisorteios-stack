@@ -1,7 +1,9 @@
 package com.multisorteios.common.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,6 +57,24 @@ public class RotaService {
 
 	public Rota update(Rota rota) {
 		return repo.save(rota);
+	}
+	
+	public Rota save(Rota rota) {
+		rota.setAtualizacaoDataHora(new Date());
+		return repo.save(rota);
+	}
+
+	public void delete(Rota selectedRota) {
+		repo.delete(selectedRota);
+	}
+
+	public void removeAll(List<Rota> selectedRotas) {
+		repo.deleteAllInBatch(selectedRotas.stream().collect(Collectors.toList()));
+		
+	}
+
+	public List<Rota> findByMatrizId(Integer RotaId) {
+		return repo.findByMatrizId(RotaId);
 	}
 
 }

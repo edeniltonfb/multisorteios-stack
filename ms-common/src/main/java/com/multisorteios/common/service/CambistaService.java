@@ -2,6 +2,7 @@ package com.multisorteios.common.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,8 +54,21 @@ public class CambistaService {
 		return repo.findByEmpresaLogin(empresaId, login);
 	}
 
-	public Cambista update(Cambista cambista) {
+	public Cambista save(Cambista cambista) {
 		return repo.save(cambista);
+	}
+
+	public void delete(Cambista selectedCambista) {
+		repo.delete(selectedCambista);
+	}
+
+	public void removeAll(List<Cambista> selectedCambistas) {
+		repo.deleteAllInBatch(selectedCambistas.stream().collect(Collectors.toList()));
+		
+	}
+
+	public List<Cambista> findByMatrizId(Integer CambistaId) {
+		return repo.findByMatrizId(CambistaId);
 	}
 
 }

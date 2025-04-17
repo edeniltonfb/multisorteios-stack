@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import com.multisorteios.cambista.model.TokenAcessoCambista;
 import com.multisorteios.cambista.trasnfer.ApostaBolaoTO;
 import com.multisorteios.cambista.trasnfer.BilheteReportTO;
+import com.multisorteios.cambista.trasnfer.CambistaTO;
 import com.multisorteios.cambista.trasnfer.ExtratoVendaTO;
 import com.multisorteios.cambista.trasnfer.ItemExtratoVendaTO;
+import com.multisorteios.cambista.trasnfer.RotaTO;
 import com.multisorteios.common.enums.BilheteSituacao;
 import com.multisorteios.common.exception.BusinessException;
 import com.multisorteios.common.model.Administrador;
@@ -195,7 +197,7 @@ public class ApiService {
 			}
 
 			cambista.setSenha(novaSenha);
-			cambistaService.update(cambista);
+			cambistaService.save(cambista);
 			return;
 		}
 		
@@ -358,5 +360,89 @@ public class ApiService {
 		result.setTelefone(telefone);
 
 		return result;
+	}
+	
+	public List<RotaTO> listarRotas(String token, Integer empresaId) {
+		validateToken(token, empresaId, Administrador.class);
+
+		List<Rota> result = rotaService.findByMatrizId(empresaId);
+
+		return result.stream().map(x -> new RotaTO(
+				x.getId(),
+				x.getNome(),
+				"S".equals(x.getAtiva())
+				)).collect(Collectors.toList());
+	}
+
+	public Rota salvarRota(String token, Integer empresaId, RotaTO rotaTO) {
+		validateToken(token, empresaId, Administrador.class);
+
+		Rota rota = rotaService.find(rotaTO.getId());
+		if(rota == null) {
+			rota = new Rota();
+		}
+		rota.setAtiva("S" /*filialTO.isAtivo()? "S" : "N"*/);
+		rota.setEmpresaId(empresaId);
+		rota.setNome(rotaTO.getNome());
+
+		rota = rotaService.save(rota);
+
+		return rota;
+	}
+
+	public void excluirRota(String token, Integer empresaId, Integer rotaId) {
+		validateToken(token, empresaId, Administrador.class);
+
+		Rota rota = rotaService.find(rotaId);
+
+		rotaService.delete(rota);
+		
+	}
+	
+	public List<CambistaTO> listarCambistas(String token, Integer empresaId) {
+		validateToken(token, empresaId, Rota.class);
+
+		List<Cambista> result = cambistaService.findByMatrizId(empresaId);
+
+		return result.stream().map(x -> new CambistaTO(
+				x.getId(),
+				x.getNome(),
+				x.getComissao(),
+				x.getEmail(),
+				x.getWhatsapp(),
+				x.getEmpresaId(),
+				"S".equals(x.getAtiva())
+				)).collect(Collectors.toList());
+	}
+
+	public Cambista salvarCambista(String token, Integer empresaId, CambistaTO cambistaTO) {
+		validateToken(token, empresaId, Rota.class);
+
+		Cambista cambista = cambistaService.find(cambistaTO.getId());
+		if(cambista == null) {
+			cambista = new Cambista();
+			cambista.setAtualizacaoDataHora(new Date());
+		}
+		
+		cambista.setAtiva("S" /*filialTO.isAtivo()? "S" : "N"*/);
+		cambista.setEmpresaId(empresaId);
+		cambista.setNome(cambistaTO.getNome());
+		cambista.setComissao(cambistaTO.getComissao());
+		cambista.setEmail(cambistaTO.getEmail());
+		cambista.setRotaId(cambistaTO.getRotaId());
+		cambista.setWhatsapp(cambistaTO.getWhatsapp());
+		cambista = cambistaService.save(cambista);
+
+		return cambista;
+	}
+
+	public void excluirCambista(String token, Integer empresaId, Integer cambistaId) {
+		
+		validateToken(token, empresaId, Rota.class);
+
+		Cambista cambista = cambistaService.find(cambistaId);
+
+		cambistaService.delete(cambista);
+		
 	}
 }
