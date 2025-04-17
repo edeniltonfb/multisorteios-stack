@@ -17,8 +17,8 @@ import javax.persistence.Version;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
-@Table(name = "cambista", uniqueConstraints = @UniqueConstraint(columnNames = {"login", "empresa_id"}))
-public class Cambista extends EntityProfileVO {
+@Table(name = "rota", uniqueConstraints = @UniqueConstraint(columnNames = {"login", "empresa_id"}))
+public class Rota extends EntityProfileVO  {
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -29,9 +29,6 @@ public class Cambista extends EntityProfileVO {
 	@Column(name = "empresa_id", nullable = false)
 	private Integer empresaId;
 	
-	@Column(name = "rota_id", nullable = false)
-	private Integer rotaId;
-
 	@Column(name = "nome", nullable = false, length = 40)
 	private String nome;
 
@@ -73,14 +70,6 @@ public class Cambista extends EntityProfileVO {
 
 	public void setEmpresaId(Integer empresaId) {
 		this.empresaId = empresaId;
-	}
-
-	public Integer getRotaId() {
-		return rotaId;
-	}
-
-	public void setRotaId(Integer rotaId) {
-		this.rotaId = rotaId;
 	}
 
 	public String getNome() {

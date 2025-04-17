@@ -1,6 +1,5 @@
 package com.multisorteios.common.model;
 
-import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -17,8 +16,8 @@ import javax.persistence.Version;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
-@Table(name = "cambista", uniqueConstraints = @UniqueConstraint(columnNames = {"login", "empresa_id"}))
-public class Cambista extends EntityProfileVO {
+@Table(name = "administrador", uniqueConstraints = @UniqueConstraint(columnNames = {"login", "empresa_id"}))
+public class Administrador extends EntityProfileVO {
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -29,9 +28,6 @@ public class Cambista extends EntityProfileVO {
 	@Column(name = "empresa_id", nullable = false)
 	private Integer empresaId;
 	
-	@Column(name = "rota_id", nullable = false)
-	private Integer rotaId;
-
 	@Column(name = "nome", nullable = false, length = 40)
 	private String nome;
 
@@ -49,9 +45,6 @@ public class Cambista extends EntityProfileVO {
 	
 	@Column(name = "senha", nullable = false, length = 120)
 	private String senha;
-	
-	@Column(name = "comissao", nullable = true, length = 4, precision = 4, scale = 2)
-	private BigDecimal comissao;
 	
 	@JsonFormat(/*timezone = "GMT-03:00", */shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
 	@Column(name = "atualizacao_data_hora", nullable = false)
@@ -73,14 +66,6 @@ public class Cambista extends EntityProfileVO {
 
 	public void setEmpresaId(Integer empresaId) {
 		this.empresaId = empresaId;
-	}
-
-	public Integer getRotaId() {
-		return rotaId;
-	}
-
-	public void setRotaId(Integer rotaId) {
-		this.rotaId = rotaId;
 	}
 
 	public String getNome() {
@@ -113,14 +98,6 @@ public class Cambista extends EntityProfileVO {
 
 	public void setWhatsapp(String whatsapp) {
 		this.whatsapp = whatsapp;
-	}
-
-	public BigDecimal getComissao() {
-		return comissao;
-	}
-
-	public void setComissao(BigDecimal comissao) {
-		this.comissao = comissao;
 	}
 
 	public String getLogin() {

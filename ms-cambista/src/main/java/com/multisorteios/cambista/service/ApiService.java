@@ -12,22 +12,31 @@ import org.springframework.stereotype.Service;
 
 import com.multisorteios.cambista.model.TokenAcessoCambista;
 import com.multisorteios.cambista.trasnfer.ApostaBolaoTO;
+import com.multisorteios.cambista.trasnfer.BilheteReportTO;
 import com.multisorteios.cambista.trasnfer.ExtratoVendaTO;
 import com.multisorteios.cambista.trasnfer.ItemExtratoVendaTO;
 import com.multisorteios.common.enums.BilheteSituacao;
 import com.multisorteios.common.exception.BusinessException;
+import com.multisorteios.common.model.Administrador;
 import com.multisorteios.common.model.ApostaBolao;
 import com.multisorteios.common.model.Bilhete;
 import com.multisorteios.common.model.Cambista;
 import com.multisorteios.common.model.Cliente;
+import com.multisorteios.common.model.Empresa;
+import com.multisorteios.common.model.EntityProfileVO;
 import com.multisorteios.common.model.Evento;
+import com.multisorteios.common.model.Rota;
 import com.multisorteios.common.model.fake.DadosAposta;
+import com.multisorteios.common.service.AdministradorService;
 import com.multisorteios.common.service.ApostaBolaoService;
 import com.multisorteios.common.service.BilheteApostaService;
 import com.multisorteios.common.service.BilheteService;
 import com.multisorteios.common.service.CambistaService;
 import com.multisorteios.common.service.ClienteService;
+import com.multisorteios.common.service.EmpresaService;
 import com.multisorteios.common.service.EventoService;
+import com.multisorteios.common.service.MensagemWhatsAppService;
+import com.multisorteios.common.service.RotaService;
 import com.multisorteios.common.transfer.DadosClienteTO;
 import com.multisorteios.common.transfer.EventoBasicoDTO;
 import com.multisorteios.common.transfer.LoginTO;
@@ -43,9 +52,18 @@ public class ApiService {
 
 	@Autowired
 	private CambistaService cambistaService;
+	
+	@Autowired
+	private RotaService rotaService;
+	
+	@Autowired
+	private AdministradorService administradorService;
 
 	@Autowired
 	private EventoService eventoService;
+	
+	@Autowired
+	private EmpresaService empresaService;
 
 	@Autowired
 	private BilheteService bilheteService;
@@ -61,40 +79,102 @@ public class ApiService {
 	
 	@Autowired
 	private ClienteService clienteService;
+	
+	@Autowired
+	private BilheteReportService bilheteReportService;
+	
+	@Autowired
+	private MensagemWhatsAppService mensagemWhatsAppService;
 
 	public LoginTO login(Integer empresaId, LoginTO login) {
 		Cambista cambista = cambistaService.findByEmpresaLogin(empresaId, login.getLogin());
-		if(cambista == null || !StringUtils.equals(login.getPassword(), cambista.getSenha())) {
-			throw new BusinessException("Credenciais inválidas");
+		if(cambista != null && StringUtils.equals(login.getPassword(), cambista.getSenha())) {
+			TokenAcessoCambista tac = tokenAcessoCambistaService.gerarCodigoAcesso(empresaId, cambista.getId());
+			login.setToken(tac.getToken());
+			login.setName(cambista.getNome());
+			login.setProfile("CAMBISTA");
+			return login;
 		}
-
-		TokenAcessoCambista tac = tokenAcessoCambistaService.gerarCodigoAcesso(empresaId, cambista.getId());
-		login.setToken(tac.getToken());
-		login.setName(cambista.getNome());
-
-		return login;
+		
+		Rota rota = rotaService.findByEmpresaLogin(empresaId, login.getLogin());
+		if(rota != null && StringUtils.equals(login.getPassword(), rota.getSenha())) {
+			TokenAcessoCambista tac = tokenAcessoCambistaService.gerarCodigoAcesso(empresaId, rota.getId());
+			login.setToken(tac.getToken());
+			login.setName(rota.getNome());
+			login.setProfile("SUPERVISOR");
+			
+			return login;
+		}
+		
+		Administrador administrador= administradorService.findByEmpresaLogin(empresaId, login.getLogin());
+		if(administrador != null && StringUtils.equals(login.getPassword(), administrador.getSenha())) {
+			TokenAcessoCambista tac = tokenAcessoCambistaService.gerarCodigoAcesso(empresaId, administrador.getId());
+			login.setToken(tac.getToken());
+			login.setName(administrador.getNome());
+			login.setProfile("ADMIN");
+			
+			return login;
+		}
+		
+		throw new BusinessException("Credenciais inválidas");
+		
 	}
-
-	public Cambista validateToken(String token, Integer empresaId) {
+	
+	
+	public <T extends EntityProfileVO> T validateToken(String token, Integer empresaId, Class<T> type) {
+		EntityProfileVO entity = validateToken(token, empresaId);
+		if (!type.isInstance(entity)) {
+	        throw new BusinessException("Perfil inválido: esperado " + type.getSimpleName() 
+	            + " mas encontrado " + entity.getClass().getSimpleName());
+	    }
+	    
+	    return type.cast(entity);
+		
+	}
+	
+	public EntityProfileVO validateToken(String token, Integer empresaId) {
 		TokenAcessoCambista tokenAcesso = tokenAcessoCambistaService.validateToken(empresaId, token);
 		if(tokenAcesso == null) {
 			throw new BusinessException("Token inválido");
 		}
-
+		
 		Cambista cambista = cambistaService.find(tokenAcesso.getId().getCambistaId());
-		if(cambista == null) {
-			throw new BusinessException("Cambista indefinido");	
+		if(cambista != null) {
+			if(!"S".equals(cambista.getAtiva())) {
+				throw new BusinessException("Cambista inativo");	
+			}	
+			if(!IntegerUtils.equals(empresaId, cambista.getEmpresaId())) {
+				throw new BusinessException("Cambista inválido");	
+			}
+			
+			return cambista;
+		}
+		
+		Rota rota = rotaService.find(tokenAcesso.getId().getCambistaId());
+		if(rota != null) {
+			if(!"S".equals(rota.getAtiva())) {
+				throw new BusinessException("Rota inativa");	
+			}	
+			if(!IntegerUtils.equals(empresaId, rota.getEmpresaId())) {
+				throw new BusinessException("Rota inválida");	
+			}
+			
+			return rota;
+		}
+		
+		Administrador admin = administradorService.find(tokenAcesso.getId().getCambistaId());
+		if(admin != null) {
+			if(!"S".equals(admin.getAtiva())) {
+				throw new BusinessException("Administrador inativo");	
+			}	
+			if(!IntegerUtils.equals(empresaId, admin.getEmpresaId())) {
+				throw new BusinessException("Administrador inválido");	
+			}
+			
+			return admin;
 		}
 
-		if(!"S".equals(cambista.getAtiva())) {
-			throw new BusinessException("Cambista inativo");	
-		}
-
-		if(!IntegerUtils.equals(empresaId, cambista.getEmpresaId())) {
-			throw new BusinessException("Cambista inválido");	
-		}
-
-		return cambista;
+		throw new BusinessException("Usuário indefinido");
 	}
 
 	public List<EventoBasicoDTO> listarEventos(Integer empresaId) {
@@ -105,21 +185,51 @@ public class ApiService {
 	}
 
 	public void alterarSenha(String token, Integer empresaId, String senhaAtual, String novaSenha) {
-		Cambista cambista = validateToken(token, empresaId);
-		if(!StringUtils.equals(senhaAtual, cambista.getSenha())) {
-			throw new BusinessException("Senha atual não confere");
+		
+		EntityProfileVO entityProfile = validateToken(token, empresaId);
+		
+		if (entityProfile instanceof Cambista) {
+			Cambista cambista = (Cambista) entityProfile;
+			if(!StringUtils.equals(senhaAtual, cambista.getSenha())) {
+				throw new BusinessException("Senha atual não confere");
+			}
+
+			cambista.setSenha(novaSenha);
+			cambistaService.update(cambista);
+			return;
+		}
+		
+		if (entityProfile instanceof Rota) {
+			Rota rota = (Rota) entityProfile;
+			if(!StringUtils.equals(senhaAtual, rota.getSenha())) {
+				throw new BusinessException("Senha atual não confere");
+			}
+
+			rota.setSenha(novaSenha);
+			rotaService.update(rota);
+			return;
+		}
+		
+		if (entityProfile instanceof Administrador) {
+			Administrador admin = (Administrador) entityProfile;
+			if(!StringUtils.equals(senhaAtual, admin.getSenha())) {
+				throw new BusinessException("Senha atual não confere");
+			}
+
+			admin.setSenha(novaSenha);
+			administradorService.update(admin);
+			return;
 		}
 
-		cambista.setSenha(novaSenha);
-		cambistaService.update(cambista);
-
+		throw new BusinessException("Cadastro inválido");
 	}
 
 	public void registrarAposta(String token, Integer empresaId, ApostaBolaoTO requestData) {
-		Cambista cambista = validateToken(token, empresaId);
+		Cambista cambista = validateToken(token, empresaId, Cambista.class);
 
 		String eventoId = requestData.getEventoId();
 		Evento evento = eventoService.find(eventoId);
+		Empresa empresa = empresaService.find(empresaId);
 
 		String usuarioId = requestData.getTelefone();
 
@@ -172,6 +282,23 @@ public class ApiService {
 		apostaBolaoService.saveAll(apostaList);
 
 		bilheteApostaService.insert2(bilhete.getId(), apostaList);
+		
+		
+		BilheteReportTO report = new BilheteReportTO();
+		report.setBilheteId(bilhete.getId());
+		report.setCambista(cambista.getNome());
+		report.setDataHora(new DateTime(bilhete.getDataHoraPagamento()).toString(DateTime.MASCARA_DATA_HORA_TELA));
+		report.setDataSorteio(new DateTime(evento.getDataInicio()).toString(DateTime.MASCARA_DATA_HORA_TELA));
+		report.setEmpresaNome(empresa.getNome());
+		report.setNome(bilhete.getNomeApostador());
+		report.setQuantidade(bilhete.getQuantidadeApostas());
+		report.setValor(bilhete.getValorBilhete());
+		report.setNumeros(apostaList.stream().map(x -> x.getNumero()).toList());
+		
+		String comprovante = bilheteReportService.gerarRelatorio(report, false);
+		
+		mensagemWhatsAppService.create(empresaId, cambista.getWhatsapp(), "Comprovante de pagamento", comprovante, false);
+		mensagemWhatsAppService.create(empresaId, bilhete.getUsuarioId(), "Comprovante de pagamento", comprovante, false);
 
 	}
 
@@ -191,7 +318,7 @@ public class ApiService {
 	}
 
 	public ExtratoVendaTO extratoVendas(Integer empresaId, String token, String eventoId) {
-		Cambista cambista = validateToken(token, empresaId);
+		Cambista cambista = validateToken(token, empresaId, Cambista.class);
 		List<Bilhete> bilheteList = customBilheteService.findByEventoCambistaId(eventoId, cambista.getId());
 		BigDecimal valorTotal = bilheteList.stream().map(x -> x.getValorBilhete()).reduce(BigDecimal.ZERO, BigDecimal::add);
 		BigDecimal comissao = valorTotal.multiply(cambista.getComissao()).divide(new BigDecimal(100), RoundingMode.CEILING);

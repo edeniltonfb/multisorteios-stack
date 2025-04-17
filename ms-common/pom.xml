@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>br.com.multisorteios</groupId>
 		<artifactId>multisorteios</artifactId>
-		<version>1.0.17</version>
+		<version>1.0.18</version>
 	</parent>
 	<artifactId>ms-common</artifactId>
 	<packaging>jar</packaging>
@@ -31,6 +31,8 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
 		</dependency>
+		
+		<!-- e outras... -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -39,8 +41,12 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+		</dependency>
 
 
-		<!-- e outras... -->
+		
 	</dependencies>
 </project>

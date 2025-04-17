@@ -17,6 +17,8 @@ public class LoginTO implements Serializable {
 
 	private String token;
 
+	private String profile;
+
 	public String getLogin() {
 		return login;
 	}
@@ -47,6 +49,14 @@ public class LoginTO implements Serializable {
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public String getProfile() {
+		return profile;
+	}
+
+	public void setProfile(String profile) {
+		this.profile = profile;
 	}
 
 }

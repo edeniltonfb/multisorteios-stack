@@ -17,7 +17,7 @@ import com.multisorteios.cambista.service.ApiService;
 import com.multisorteios.cambista.trasnfer.ApostaBolaoTO;
 import com.multisorteios.cambista.trasnfer.ExtratoVendaTO;
 import com.multisorteios.common.exception.BusinessException;
-import com.multisorteios.common.model.Cambista;
+import com.multisorteios.common.model.EntityProfileVO;
 import com.multisorteios.common.transfer.DadosClienteTO;
 import com.multisorteios.common.transfer.EmptyResponseTO;
 import com.multisorteios.common.transfer.EventoBasicoDTO;
@@ -111,8 +111,8 @@ public class ApiResources {
 		
 		GenericCollectionResponseTO<EventoBasicoDTO, List<EventoBasicoDTO>> result;
 		try{
-			Cambista cambista = service.validateToken(token, empresaId);
-			List<EventoBasicoDTO> data = service.listarEventos(cambista.getEmpresaId());
+			EntityProfileVO entity = service.validateToken(token, empresaId);
+			List<EventoBasicoDTO> data = service.listarEventos(entity.getEmpresaId());
 			result = new GenericCollectionResponseTO<EventoBasicoDTO, List<EventoBasicoDTO>>(true, null, data);
 		}catch (BusinessException e) {
 			result = new GenericCollectionResponseTO<EventoBasicoDTO, List<EventoBasicoDTO>>(false, e.getMessage(), null);
