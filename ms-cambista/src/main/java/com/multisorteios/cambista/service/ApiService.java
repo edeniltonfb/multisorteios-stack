@@ -264,6 +264,7 @@ public class ApiService {
 		bilhete.setEmpresaAlias("");
 		bilhete.setDataLimitePagamento(new Date());
 		bilhete.setHistorico("S");
+		bilhete.setDataHoraPagamento(new Date());
 
 		bilhete = bilheteService.insert(bilhete);
 
@@ -295,7 +296,7 @@ public class ApiService {
 		report.setNome(bilhete.getNomeApostador());
 		report.setQuantidade(bilhete.getQuantidadeApostas());
 		report.setValor(bilhete.getValorBilhete());
-		report.setNumeros(apostaList.stream().map(x -> x.getNumero()).toList());
+		report.setNumeros(apostaList.stream().map(x -> x.getNumero()).collect(Collectors.toList()));
 		
 		String comprovante = bilheteReportService.gerarRelatorio(report, false);
 		
